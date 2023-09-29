@@ -10,7 +10,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
+    public static final String GET = "GET";
+    public static final String POST = "POST";
 
+    final List<String> allowedMethods = List.of(GET, POST);
     private static ExecutorService threadPool = Executors.newFixedThreadPool(16);
     private int port;
     private List<String> validPaths = List.of("/index.html", "/spring.svg", "/spring.png", "/resources.html", "/styles.css", "/app.js", "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js");
@@ -36,7 +39,7 @@ public class Server {
         while (true) {
             try (ServerSocket server = new ServerSocket(port)) {
                 Socket clientSocket = server.accept();
-                threadPool.execute(new ThreadProcessing(clientSocket, validPaths, handlerList));
+                threadPool.execute(new ThreadProcessing(clientSocket, validPaths, handlerList, allowedMethods));
                 System.out.println("Новое подключение");
             } catch (IOException ex) {
                 //Если порт оказывается занятым, происходит его переназначение и перезапись в файл settings

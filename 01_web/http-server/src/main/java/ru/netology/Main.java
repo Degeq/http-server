@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 public class Main {
@@ -37,6 +38,28 @@ public class Main {
                     out.flush();
                 } catch (IOException ex) {
                     ex.printStackTrace();
+                }
+            }
+        });
+
+        server.addHandler("GET", "/message", new Handler() {
+            @Override
+            public void handle(Request request, BufferedOutputStream out) {
+                try {
+                    // выводим на экран результат парсинг QueryString для метода GET
+                    System.out.println(request.getQueryParams());
+                    System.out.println(request.getSpecificParam("value"));
+                    System.out.println(request.getPath());
+
+                    out.write((
+                            "HTTP/1.1 200 OK\r\n" +
+                                    "Content-Length: 0\r\n" +
+                                    "Connection: close\r\n" +
+                                    "\r\n"
+                    ).getBytes());
+                    out.flush();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
         });
