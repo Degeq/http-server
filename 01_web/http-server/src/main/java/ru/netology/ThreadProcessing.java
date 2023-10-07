@@ -5,17 +5,12 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.http.client.utils.URLEncodedUtils;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Optional;
 
 public class ThreadProcessing implements Runnable {
@@ -93,7 +88,22 @@ public class ThreadProcessing implements Runnable {
 
             final var headersBytes = in.readNBytes(headersEnd - headersStart);
             final var headers = Arrays.asList(new String(headersBytes).split("\r\n"));
-            System.out.println(headers);
+            request.setHeaders(headers);
+            System.out.println(request.getAllHeaders());
+
+            // для GET тела нет
+            if (!request.getMethod().equals(Server.GET)) {
+                in.skip(headersDelimiter.length);
+                // вычитываем Content-Length, чтобы прочитать body
+                final var contentLength = extractHeader(headers, "Content-Length");
+                if (contentLength.isPresent()) {
+                    final var length = Integer.parseInt(contentLength.get());
+                    final var bodyBytes = in.readNBytes(length);
+
+                    request.setBody(new String(bodyBytes));
+                    System.out.println(request.getQueryParams());
+                }
+            }
 
             if (handlersList.get(request.getMethod()).containsKey(request.getPath())) {
                 synchronized (handlersList) {
@@ -101,19 +111,7 @@ public class ThreadProcessing implements Runnable {
                 }
             }
 //
-//            // для GET тела нет
-//            if (!request.getMethod().equals(Server.GET)) {
-//                in.skip(headersDelimiter.length);
-//                // вычитываем Content-Length, чтобы прочитать body
-//                final var contentLength = extractHeader(headers, "Content-Length");
-//                if (contentLength.isPresent()) {
-//                    final var length = Integer.parseInt(contentLength.get());
-//                    final var bodyBytes = in.readNBytes(length);
-//
-//                    request.setBody(new String(bodyBytes));
-//                    System.out.println(request.getQueryParams());
-//                }
-//            }
+
 
             out.write((
                     "HTTP/1.1 200 OK\r\n" +
